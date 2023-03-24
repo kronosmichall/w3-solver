@@ -11,6 +11,7 @@ from selenium.common.exceptions import ElementClickInterceptedException, NoSuchE
 
 # link = https://www.w3schools.com/html/exercise.asp?filename=exercise_html_attributes2
 WAIT_TIME = 0.25
+MANUAL_TIME = 10000
 assert len(sys.argv) == 2, "musi być podana 1 zmienna - url"
 startUrl = sys.argv[1]
 driver = webdriver.Chrome()
@@ -61,6 +62,10 @@ def getAnswers():
 
     return answers
 
+
+def manualFill(submit):
+    WebDriverWait(driver, MANUAL_TIME).until(EC.staleness_of(driver.find_element(By.TAG_NAME, "html")))
+
 def fillPage():
     inputAns = []
 
@@ -81,7 +86,10 @@ def fillPage():
 
     WebDriverWait(driver, WAIT_TIME).until(EC.element_to_be_clickable(submit))
     click(submit)
-    click(submit)
+    if (submit.get_attribute("innerText") == "Try Again"):
+        manualFill(submit)
+    else:
+        click(submit)
 
 def repeat():
     string = driver.find_element(By.ID, "completedExercisesNo").get_attribute("innerText")
