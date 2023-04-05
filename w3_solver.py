@@ -3,13 +3,11 @@ import time
 import re
 import os
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import ElementClickInterceptedException, NoSuchElementException
 
-# link = https://www.w3schools.com/html/exercise.asp?filename=exercise_html_attributes2
+# link = https://www.w3schools.com/html/exercise.asp?filename=exercise_html_attributes1
 WAIT_TIME = 0.25
 MANUAL_TIME = 10000
 assert len(sys.argv) == 2, "musi być podana 1 zmienna - url"
@@ -27,57 +25,36 @@ def clickAll(buttons):
     for b in buttons:
         click(b)
     
+
 def getAnswers():
-    assigment = driver.find_element(By.ID, "assignmentcode").get_attribute("innerText")
-    correct = driver.find_element(By.ID, "correctcode").get_attribute("innerText")
-    answers = []
+    ans = []
+    showAns = driver.find_elements(By.CLASS_NAME, "showanswerbutton")
+    hideAns = driver.find_elements(By.CLASS_NAME, "hideanswerbutton")
+    clickAll(showAns)
 
-    while (len(assigment) > 0 and len(correct) > 0):
-        common_len = len(os.path.commonprefix([assigment, correct]))
-        assigment = assigment[common_len:]
-        correct = correct[common_len:]
-        
-        # a_split = assigment.split('"', 1)
-        # c_split = correct.split('"', 1)
-        # if (len(a_split) == 2 and len(c_split) == 2):
-        #     print("...")
-        #     answers.append(c_split[0])
-        #     assigment = a_split[1]
-        #     correct = c_split[1]
+    fields = driver.find_elements(By.CLASS_NAME, "editablesection")
+    for field in fields:
+        val = field.get_attribute("value")
+        if (len(val) > 0):
+            ans.append(val)
 
-        a_split = assigment.split(')', 1)
-        if (len(a_split) == 2):
-            next_c = a_split[1][0]
-            c_split = correct.split(next_c, 1)
-            answers.append(c_split[0])
-            assigment = a_split[1][1:]
-            correct = c_split[1]
-
-        # c_split = correct.split('"', 1)
-        # if (len(a_split) == 2 and len(c_split) == 2):
-        #     print("...")
-        #     answers.append(c_split[0])
-        #     assigment = a_split[1]
-        #     correct = c_split[1]
-
-    return answers
-
+    clickAll(hideAns)
+    return ans
 
 def manualFill(submit):
     WebDriverWait(driver, MANUAL_TIME).until(EC.staleness_of(driver.find_element(By.TAG_NAME, "html")))
 
 def fillPage():
     inputAns = []
-
     inputFields = driver.find_elements(By.CLASS_NAME, "editablesection")
-    showAns = driver.find_elements(By.CLASS_NAME, "showanswerbutton")
-    hideAns = driver.find_elements(By.CLASS_NAME, "hideanswerbutton")
     submit = driver.find_element(By.ID, "answerbutton")
 
-    clickAll(showAns)
     inputAns = getAnswers()
 
-    clickAll(hideAns)
+    if (len(inputAns) != len(inputFields)):
+        manualFill(submit)
+        return 
+        
     for i in range(len(inputFields)):
         inputFields[i].clear()
         inputFields[i].send_keys(inputAns[i])
